@@ -708,7 +708,7 @@
 
 
 ; Chargement de la librairie
-Loading the library
+; Loading the library
 
 (define libcprims #f)
 (define libalias #f)
