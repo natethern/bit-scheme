@@ -7,13 +7,20 @@
 /*     les points flottants, */
 /*     les entiers de taille illimitee, */
 /*     l'entree de nombres non-decimaux. */
+/* Mini Scheme interpreter. Third in a series. */
+/* Does not handle: */
+/* ports, */
+/* floating points, */
+/* unlimited integers, */
+/* non-decimal number input. */
 
 #include "bit.h"
 
 
 
 
-/* Variables globales C ----------------------------------------- */
+/* Variables globales C
+   C Global Variables----------------------------------------- */
 
 int *mem;
 int  mem_len, nb_handles, nb_obj, handle1, mem_next, mem_free, mem_stack;
@@ -84,16 +91,20 @@ int (*cprim3[NBCPRIM3])(int, int, int) =
 
 
 
-/* Variables globales SCM --------------------------------------- */
+/* Variables globales SCM
+   SCM Global Variables   --------------------------------------- */
 
 /* Les variables contenues dans stack */
 /* doivent etre mises a jour par le gc */
+/* Variables contained in stack */
+/* must be updated by the gc */
 int globs[NBGLOBS];
 
 
 
 
-/* Allocation du monceau ---------------------------------------- */
+/* Allocation du monceau
+   Allocation of the heap ---------------------------------------- */
 
 void alloc_heap(int taille)
 {
@@ -146,11 +157,15 @@ void mark_it(int d)
 /* La description des etats est ailleurs */
 /* Note: mem_free n'est maintenu qu'entre deux phases de GC */
 /* Note: meme chose pour nb_obj */
+/* The description of the states is elsewhere */
+/* Note: mem_free is only maintained between two GC phases */
+/* Note: the same applies to nb_obj */
+
 void gc(int size)
 {
   int court, start, j, nbcases, marque, d, handle, subnlen;
 
-  gc_time += size + size;    /* Simuler une multiplication rapide */
+  gc_time += size + size;    /* Simuler une multiplication rapide ||| Simulate fast multiplication */
   if (gc_ratio >= 3)
     {
       gc_time += size;
@@ -175,14 +190,14 @@ void gc(int size)
 			2 * nb_scm_globs +
 			(5 * mem_free + 1) / 2 -
 			1) / mem_free;
-	  gc_time += size * gc_ratio;   /* Car le ratio etait insuffisant */
+	  gc_time += size * gc_ratio;   /* Car le ratio etait insuffisant ||| Because the ratio was insufficient */
 	  gc_time -= (gc_ratio *
 		      (((2 * gc_ratio - 3) * mem_free -
 			4 * (mem_next - nb_handles) -
 			4 * nb_obj -
 			4 * nb_scm_globs) /
 		       (2 * gc_ratio + 1)));
-	  gc_time += 50;                /* Securite! */
+	  gc_time += 50;                /* Securite! ||| Security! */
 	  gc_state = 1;
 	  break;
 	}
@@ -411,9 +426,11 @@ void gc(int size)
 
 
 
-/* Fonction d'allocation de memoire ----------------------------- */
+/* Fonction d'allocation de memoire
+   Memory allocation function ----------------------------- */
 
-/* Un appel a cette fonction peut declencher le gc */
+/* Un appel a cette fonction peut declencher le gc
+   A call to this function may trigger the gc */
 int alloc_cell(int len, int bitpattern)
 {
   int j, pos, handle, d, marque;
@@ -456,7 +473,8 @@ int alloc_cell(int len, int bitpattern)
 
 
 
-/* Fonctions relatives a BOOLEAN -------------------------------- */
+/* Fonctions relatives a BOOLEAN
+   Functions related to BOOLEAN -------------------------------- */
 
 int pred_boolean(int d)
 {
@@ -466,7 +484,8 @@ int pred_boolean(int d)
 
 
 
-/* Fonctions relatives a PAIR ----------------------------------- */
+/* Fonctions relatives a PAIR
+   Functions related to PAIR ----------------------------------- */
 
 int pred_pair(int d)
 {
@@ -538,7 +557,8 @@ int list_copy(int l)
 
 
 
-/* Fonctions relatives a CHAR ----------------------------------- */
+/* Fonctions relatives a CHAR
+   Functions related to CHAR ----------------------------------- */
 
 int pred_char(int d)
 {
@@ -558,7 +578,8 @@ int char_to_integer(int c)
 
 
 
-/* Fonctions relatives a STRING --------------------------------- */
+/* Fonctions relatives a STRING
+   Functions related to STRING --------------------------------- */
 
 int c_pred_string(int d)
 {
@@ -696,7 +717,8 @@ int string_copy(int s1)
 
 
 
-/* Fonctions relatives a SYMBOL --------------------------------- */
+/* Fonctions relatives a SYMBOL
+   Functions related to SYMBOL --------------------------------- */
 
 int pred_symbol(int d)
 {
@@ -751,7 +773,8 @@ int string_to_symbol(int string)
 
 
 
-/* Fonctions relatives a NUMBER --------------------------------- */
+/* Fonctions relatives a NUMBER
+   Functions related to NUMBER --------------------------------- */
 
 int pred_number(int d)
 {
@@ -767,6 +790,7 @@ int to_c_number(int n)
 }
 
 /* Les op. se font AVEC les tags */
+/* Operations are done WITH tags */
 int cppoe2(int n1, int n2)
 {
   return (n1 <= n2) ? scm_true : scm_false;
@@ -795,7 +819,8 @@ int cdivise2(int n1, int n2)
 
 
 
-/* Fonctions relatives a VECTOR --------------------------------- */
+/* Fonctions relatives a VECTOR
+   Functions related to VECTOR --------------------------------- */
 
 int c_pred_vector(int d)
 {
@@ -885,7 +910,8 @@ int c_vector_int_len(int v)
 
 
 
-/* Fonctions relatives a PROCEDURE ------------------------------ */
+/* Fonctions relatives a PROCEDURE
+   Functions related to PROCEDURE ------------------------------ */
 
 int pred_procedure(int d)
 {
@@ -917,6 +943,8 @@ int closure_env(int c)
 
 /* Cette fonction ne peut appeler direct. c_apply */
 /* Note: elle utilise le apply-hook a la fin du bytecode */
+/* This function cannot call c_apply directly */
+/* Note: This function uses the apply-hook at the end of the bytecode */
 int apply(int c, int args)
 {
   eval_pc = bytecode_len - 1;
@@ -927,7 +955,8 @@ int apply(int c, int args)
 
 
 
-/* Fonctions relatives a CONT ----------------------------------- */
+/* Fonctions relatives a CONT
+   Functions related to CONT ------------------------------ */
 
 int c_pred_cont(int d)
 {
@@ -968,7 +997,8 @@ void restore_cont(int k)
 
 
 
-/* Fonctions d'entree/sortie ------------------------------------ */
+/* Fonctions d'entree/sortie
+   Input/output functions ------------------------------------ */
 
 int ll_input(void)
 {
@@ -1028,7 +1058,8 @@ int write_char(int c)
 
 
 
-/* Autres fonctions de la librairie ----------------------------- */
+/* Autres fonctions de la librairie
+   Other library functions ----------------------------- */
 
 int eq(int d1, int d2)
 {
@@ -1059,7 +1090,8 @@ int return_there_with_this(int complete_cont, int val)
 
 
 
-/* Fonctions relatives au coeur de l'interprete ----------------- */
+/* Fonctions relatives au coeur de l'interprete
+   Functions related to the heart of the interpreter ----------------- */
 
 static int intro_state;
 
@@ -1080,7 +1112,8 @@ int introspection(int arg)
 
 
 
-/* Le coeur de l'interprete ------------------------------------- */
+/* Le coeur de l'interprete
+   The heart of the interpreter ------------------------------------- */
 
 void init_bc_reader(void)
 {
@@ -1244,8 +1277,8 @@ void c_apply(int c, int args)
   int cprim_no;
   int temp;
 
-  if (C_PRED_CPRIM(c))  /* Dans une application generale, */
-    {                   /* il faut forcer la restoration */
+  if (C_PRED_CPRIM(c))  /* Dans une application generale, |||  In a general application, */
+    {                   /* il faut forcer la restoration  |||  it is necessary to force the restoration */
       cprim_no = CPRIM_NUMBER(c);
       temp = apply_cprim(cprim_no, args);
       if (cprim_no != APPLY_CPRIM_NO)
@@ -1394,7 +1427,7 @@ void execute_bc(void)
 	  }
 	case 16:
 	  {
-	    fprintf(stderr, "Ce n'est plus suppose etre utilise!\n");
+	    fprintf(stderr, "Ce n'est plus suppose etre utilise!\n"); /* "This is no longer supposed to be used!" */
 	    break;
 	  }
 	case 46:
@@ -1409,7 +1442,7 @@ void execute_bc(void)
 	  }
 	case 18:
 	  {
-	    fprintf(stderr, "Ce n'est plus suppose etre utilise!\n");
+	    fprintf(stderr, "Ce n'est plus suppose etre utilise!\n"); /* "This is no longer supposed to be used!" */
 	    break;
 	  }
 	case 20:
@@ -1622,7 +1655,8 @@ void execute_bc(void)
 
 
 
-/* Le programme principal --------------------------------------- */
+/* Le programme principal
+   The main program --------------------------------------- */
 
 int init_scm_glob_1(int code)
 {
